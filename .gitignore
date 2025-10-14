@@ -1,0 +1,17 @@
+/.venv
+/AI_FEATURES_GUIDE.md
+/AI_INTEGRATION_SUMMARY.md
+/NEW_FEATURES_SUMMARY.md
+/PROJECT_OVERVIEW.md
+/QUICK_START_GUIDE.md
+/USAGE.md
+/__pycache__
+/examples.py
+/launch_calculator.sh
+/quick_ai_test.py
+/requirements_new_features.txt
+/run_calculator.py
+/test_ai.py
+/test_ai_integration.py
+/test_calculator.py
+/test_fast.py
