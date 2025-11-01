@@ -1,0 +1,191 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     ALGEBRA FEATURES - QUICK REFERENCE                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ACCESSING ALGEBRA FEATURES                                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ • Menu: Tools → Algebra Helper (interactive dialog)                         │
+│ • Direct: Use functions directly in calculator documents                     │
+│ • Documentation: ALGEBRA_GUIDE.md (detailed guide)                          │
+│ • Examples: ALGEBRA_EXAMPLES.txt (comprehensive examples)                   │
+│ • Demo: Open algebra_demo.calc file                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ CREATING SYMBOLIC VARIABLES                                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Single:      x = symbols('x')                                               │
+│ Multiple:    x, y, z = symbols('x y z')                                     │
+│ Complex:     z1, z2 = symbols('z1 z2', complex=True)                        │
+│ Real:        a, b = symbols('a b', real=True)                               │
+│ Imaginary:   I (built-in imaginary unit)                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ EXPANDING FORMULAS                                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ expand(expr)              General expansion                                  │
+│ expand_trig(expr)         Expand trigonometric expressions                   │
+│ expand_log(expr)          Expand logarithms                                  │
+│ expand_power_base(expr)   Expand power bases                                 │
+│ expand_complex(expr)      Expand complex expressions                         │
+│                                                                              │
+│ Example: expand((x + y)**2) → x**2 + 2*x*y + y**2                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ CONDENSING FORMULAS                                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ factor(expr)              Factor expressions                                 │
+│ collect(expr, var)        Collect terms with respect to variable            │
+│ together(expr)            Combine fractions                                  │
+│ cancel(expr)              Cancel common factors                              │
+│ apart(expr)               Partial fraction decomposition                     │
+│                                                                              │
+│ Example: factor(x**2 - y**2) → (x - y)*(x + y)                             │
+│ Example: collect(x*y + x - 3 + 2*x**2, x) → 2*x**2 + x*(y + 1) - 3        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SIMPLIFICATION                                                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ simplify(expr)            General simplification                             │
+│ trigsimp(expr)            Trigonometric simplification                       │
+│ powsimp(expr)             Power simplification                               │
+│ ratsimp(expr)             Rational simplification                            │
+│ radsimp(expr)             Radical simplification                             │
+│                                                                              │
+│ Example: simplify((x**2 - 1)/(x - 1)) → x + 1                              │
+│ Example: trigsimp(sin(x)**2 + cos(x)**2) → 1                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SOLVING EQUATIONS                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ solve(equation, var)          General equation solver                        │
+│ solveset(equation, var)       Modern solver (returns sets)                   │
+│ linsolve(system, vars)        Linear system solver                           │
+│ nonlinsolve(system, vars)     Nonlinear system solver                        │
+│                                                                              │
+│ Single:  solve(x**2 - 4, x) → [-2, 2]                                       │
+│ Complex: solve(x**2 + 1, x) → [-I, I]                                       │
+│ System:  solve([x + y - 5, x - y - 1], [x, y]) → {x: 3, y: 2}              │
+│ Using Eq: solve(Eq(x**2, 4), x) → [-2, 2]                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ WORKING WITH COMPLEX/IMAGINARY VARIABLES                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Create:      z1, z2 = symbols('z1 z2', complex=True)                        │
+│ Imaginary:   I (imaginary unit)                                             │
+│ Conjugate:   conjugate(z)                                                    │
+│ Real part:   re(expr)                                                        │
+│ Imag part:   im(expr)                                                        │
+│                                                                              │
+│ Example: expand((z1 + z2)**2) → z1**2 + 2*z1*z2 + z2**2                    │
+│ Example: expand((x + I*y)**2) → x**2 - y**2 + 2*I*x*y                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ MATRIX OPERATIONS                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Matrix([[a, b], [c, d]])  Create matrix with symbolic entries               │
+│ M.det()                   Determinant                                        │
+│ M.trace()                 Trace                                              │
+│ M.eigenvals()             Eigenvalues                                        │
+│ M**2                      Matrix power                                       │
+│                                                                              │
+│ Example: M = Matrix([[x, y], [y, x]]) → symbolic 2×2 matrix                │
+│ Example: M.det() → x**2 - y**2                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ CALCULUS WITH SYMBOLIC VARIABLES                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ diff(expr, var)           Differentiation                                    │
+│ sym_integrate(expr, var)  Integration                                        │
+│ limit(expr, var, value)   Limits                                             │
+│ series(expr, var)         Series expansion                                   │
+│                                                                              │
+│ Example: diff((x + y)**2, x) → 2*x + 2*y                                   │
+│ Example: sym_integrate(x*y, x) → x**2*y/2                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ NUMBER THEORY                                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ isprime(n)                Check if number is prime                           │
+│ factorint(n)              Prime factorization                                │
+│ gcd(a, b)                 Greatest common divisor                            │
+│ lcm(a, b)                 Least common multiple                              │
+│ divisors(n)               All divisors of n                                  │
+│                                                                              │
+│ Example: factorint(60) → {2: 2, 3: 1, 5: 1} (means 2²×3×5)                 │
+│ Example: gcd(48, 18) → 6                                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ USEFUL CONSTANTS                                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ I             Imaginary unit                                                 │
+│ E             Euler's number (e)                                             │
+│ pi            Pi (π)                                                         │
+│ oo            Infinity (∞)                                                   │
+│ zoo           Complex infinity                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ COMMON WORKFLOWS                                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ 1. Create variables:       x, y = symbols('x y')                            │
+│ 2. Define expression:      expr = (x + y)**2                                │
+│ 3. Manipulate:             expand(expr)                                      │
+│ 4. Solve equation:         solve(expr - 9, x)                               │
+│                                                                              │
+│ For complex variables:                                                       │
+│ 1. Create:                 z1, z2 = symbols('z1 z2', complex=True)          │
+│ 2. Define:                 expr = (z1 + z2)*(z1 - z2)                       │
+│ 3. Expand:                 expand(expr) → z1**2 - z2**2                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TIPS                                                                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ • Use Algebra Helper (Tools menu) for interactive exploration               │
+│ • Variables persist across lines in documents                               │
+│ • All functions work with symbolic expressions                              │
+│ • Use pprint(expr) for pretty formatted output                              │
+│ • See ALGEBRA_EXAMPLES.txt for more complex examples                        │
+│ • Complex variables can be real-constrained with real=True                  │
+│ • Combine with NumPy/SciPy for numerical evaluation                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ EXAMPLE COMPLETE WORKFLOW                                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ # Create variables                                                           │
+│ x, y, z = symbols('x y z')                                                   │
+│                                                                              │
+│ # Expand a complex expression                                                │
+│ expr1 = expand((x + y + z)**2)                                               │
+│ # Result: x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2                       │
+│                                                                              │
+│ # Factor it back                                                             │
+│ factor(expr1)                                                                │
+│ # Result: (x + y + z)**2                                                     │
+│                                                                              │
+│ # Solve an equation                                                          │
+│ solve(x**2 + 2*x*y + y**2 - 9, x)                                           │
+│ # Result: [-y - 3, -y + 3]                                                  │
+│                                                                              │
+│ # Work with imaginary solutions                                              │
+│ solve(x**2 + 4, x)                                                           │
+│ # Result: [-2*I, 2*I]                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                       For detailed guide: ALGEBRA_GUIDE.md
+                    For examples: ALGEBRA_EXAMPLES.txt
+                    For complex variables: COMPLEX_VARIABLES_EXAMPLES.txt
+═══════════════════════════════════════════════════════════════════════════════

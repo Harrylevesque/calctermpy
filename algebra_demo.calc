@@ -1,0 +1,33 @@
+# ============================================
+# ALGEBRA DEMO - Quick Start
+# ============================================
+
+# Create symbolic variables
+x, y, z = symbols('x y z')
+
+# Expand formulas
+expand((x + y)**2)
+
+# Factor expressions
+factor(x**2 - y**2)
+
+# Simplify
+simplify((x**2 - 1)/(x - 1))
+
+# Solve equations
+solve(x**2 - 4, x)
+
+# Equations with imaginary solutions
+solve(x**2 + 1, x)
+
+# Complex variables
+z1, z2 = symbols('z1 z2', complex=True)
+expand((z1 + z2)**2)
+
+# System of equations
+solve([x + y - 5, x - y - 1], [x, y])
+
+# Collect terms
+collect(2*x**2 + x*y + x - 3, x)
+
+# Try the Algebra Helper: Tools > Algebra Helper

@@ -1,0 +1,272 @@
+# ============================================
+# Complex Variable Algebra Examples
+# Working with Multiple Imaginary Variables
+# ============================================
+
+# ============================================
+# Example 1: Basic Complex Variable Operations
+# ============================================
+
+# Create complex symbolic variables
+z1, z2, z3 = symbols('z1 z2 z3', complex=True)
+
+# Addition and multiplication
+expand((z1 + z2)**2)
+# Result: z1**2 + 2*z1*z2 + z2**2
+
+expand((z1 - z2)*(z1 + z2))
+# Result: z1**2 - z2**2
+
+# With three variables
+expand((z1 + z2 + z3)**2)
+# Result: z1**2 + 2*z1*z2 + 2*z1*z3 + z2**2 + 2*z2*z3 + z3**2
+
+# ============================================
+# Example 2: Complex Conjugates
+# ============================================
+
+# Define variables
+z = symbols('z', complex=True)
+
+# Product with conjugate (always real)
+expr1 = z * conjugate(z)
+expand(expr1)
+
+# More complex conjugate expressions
+z1, z2 = symbols('z1 z2', complex=True)
+expr2 = (z1 + z2) * conjugate(z1 + z2)
+expand(expr2)
+
+# ============================================
+# Example 3: Real and Imaginary Parts
+# ============================================
+
+# Separate real and imaginary parts
+# If z = x + I*y, then:
+x, y = symbols('x y', real=True)
+z = x + I*y
+
+# Calculate z^2
+z_squared = expand(z**2)
+# Result: x**2 - y**2 + 2*I*x*y
+
+# Extract real part: re(z**2) = x^2 - y^2
+re(z_squared)
+
+# Extract imaginary part: im(z**2) = 2xy
+im(z_squared)
+
+# ============================================
+# Example 4: Solving Equations with Complex Variables
+# ============================================
+
+# Solve for complex solutions
+solve(x**2 + 1, x)
+# Result: [-I, I]
+
+solve(x**2 + 4, x)
+# Result: [-2*I, 2*I]
+
+# Solve with complex coefficients
+z = symbols('z', complex=True)
+solve(z**2 - (2 + I), z)
+# Result: Complex solutions
+
+# ============================================
+# Example 5: Systems with Complex Variables
+# ============================================
+
+# System of equations with complex variables
+z1, z2 = symbols('z1 z2', complex=True)
+
+# Solve system
+solve([z1 + z2 - (3 + 2*I), z1 - z2 - (1 + I)], [z1, z2])
+# Result: {z1: ..., z2: ...}
+
+# ============================================
+# Example 6: Polynomials with Complex Coefficients
+# ============================================
+
+# Factor polynomial with complex numbers
+x = symbols('x')
+factor(x**2 + 1)
+# Over complex numbers: (x - I)*(x + I)
+
+factor(x**4 + 4)
+# Result: factored form
+
+# Solve cubic equation
+solve(x**3 - 1, x)
+# Result: Three roots (one real, two complex)
+
+# ============================================
+# Example 7: Euler's Formula Applications
+# ============================================
+
+# e^(ix) = cos(x) + i*sin(x)
+x = symbols('x', real=True)
+
+# Expand exponential with imaginary argument
+expand_complex(exp(I*x))
+# Shows: cos(x) + I*sin(x)
+
+# De Moivre's theorem: (cos(x) + i*sin(x))^n
+n = symbols('n', integer=True)
+expr = (cos(x) + I*sin(x))**n
+# Can be simplified using trigonometric identities
+
+# ============================================
+# Example 8: Complex Function Manipulation
+# ============================================
+
+# Define complex function
+z = symbols('z', complex=True)
+f = z**3 + 2*z**2 - z + 1
+
+# Expand and simplify
+expand(f)
+
+# Find roots
+solve(f, z)
+# Result: Three complex roots
+
+# ============================================
+# Example 9: Matrix with Complex Entries
+# ============================================
+
+# Create matrix with complex symbolic entries
+z1, z2, z3, z4 = symbols('z1 z2 z3 z4', complex=True)
+
+M = Matrix([
+    [z1, z2],
+    [z3, z4]
+])
+
+# Matrix operations
+M**2
+
+# Determinant (symbolic)
+M.det()
+# Result: z1*z4 - z2*z3
+
+# Trace
+M.trace()
+# Result: z1 + z4
+
+# ============================================
+# Example 10: Simplifying Complex Expressions
+# ============================================
+
+# Complex expression with multiple variables
+z1, z2, z3 = symbols('z1 z2 z3', complex=True)
+
+expr = (z1 + z2)*(z1 - z2) + (z2 + z3)*(z2 - z3)
+result = expand(expr)
+# Result: z1**2 - z3**2
+
+# Simplify ratio
+ratio = (z1**2 - z2**2)/(z1 - z2)
+simplify(ratio)
+# Result: z1 + z2
+
+# ============================================
+# Example 11: Mixed Real and Complex Variables
+# ============================================
+
+# Some variables real, some complex
+a, b = symbols('a b', real=True)
+z1, z2 = symbols('z1 z2', complex=True)
+
+# Expression mixing both types
+mixed_expr = a*z1 + b*z2
+expand(mixed_expr)
+
+# Separate real and imaginary
+expr = a*(x + I*y) + b*(x - I*y)
+expand(expr)
+# Result: Shows clear separation
+
+# ============================================
+# Example 12: Phasor Analysis (Engineering)
+# ============================================
+
+# Phasor representation: Z = R + j*X
+# (R = resistance, X = reactance, j = imaginary unit)
+
+R1, R2, X1, X2 = symbols('R1 R2 X1 X2', real=True)
+
+# Impedances
+Z1 = R1 + I*X1
+Z2 = R2 + I*X2
+
+# Series impedance
+Z_series = Z1 + Z2
+expand(Z_series)
+# Result: (R1 + R2) + I*(X1 + X2)
+
+# Parallel impedance: 1/Z = 1/Z1 + 1/Z2
+Z_parallel = simplify(1/(1/Z1 + 1/Z2))
+
+# ============================================
+# Example 13: Quantum Mechanics Wave Functions
+# ============================================
+
+# Wave function: ψ = A*e^(i*k*x)
+A, k, x = symbols('A k x', real=True)
+
+psi = A*exp(I*k*x)
+
+# Probability density: |ψ|^2 = ψ*ψ†
+prob_density = psi * conjugate(psi)
+simplify(prob_density)
+# Result: A**2 (purely real)
+
+# ============================================
+# Example 14: Signal Processing
+# ============================================
+
+# Complex frequency domain representation
+omega, t = symbols('omega t', real=True)
+
+# Signal: s(t) = A*e^(i*omega*t)
+A = symbols('A', real=True)
+signal = A*exp(I*omega*t)
+
+# Real part (actual signal)
+real_signal = re(signal)
+# Result: A*cos(omega*t)
+
+# Imaginary part
+imag_signal = im(signal)
+# Result: A*sin(omega*t)
+
+# ============================================
+# Example 15: Solving Simultaneous Complex Equations
+# ============================================
+
+# More complex system
+z1, z2, z3 = symbols('z1 z2 z3', complex=True)
+
+system = [
+    z1 + z2 + z3 - (6 + 2*I),
+    z1 - z2 + 2*z3 - (4 + I),
+    2*z1 + z2 - z3 - (5 - I)
+]
+
+solve(system, [z1, z2, z3])
+# Result: Solution with complex values
+
+# ============================================
+# TIPS FOR WORKING WITH COMPLEX VARIABLES
+# ============================================
+
+# 1. Always declare variables as complex=True if they can be complex
+# 2. Use conjugate() for complex conjugates
+# 3. Use re() and im() to extract real and imaginary parts
+# 4. expand_complex() is useful for separating real/imaginary
+# 5. Remember: I is the imaginary unit in SymPy
+# 6. Complex arithmetic follows standard rules
+# 7. Use simplify() to reduce complex expressions
+# 8. Matrix operations work with complex entries
+# 9. All solve functions work with complex solutions
+# 10. Pretty print with pprint() for readable output

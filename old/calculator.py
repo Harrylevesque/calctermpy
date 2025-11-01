@@ -795,6 +795,11 @@ class ScientificCalculator(QMainWindow):
         self.calculation_history = []
         self.settings = QSettings("ScientificCalculator", "Settings")
         self.text_font = QFont("Consolas", 12)
+        # Use better fallback fonts for macOS
+        if not self.text_font.exactMatch():
+            self.text_font = QFont("Monaco", 12)  # macOS monospace font
+            if not self.text_font.exactMatch():
+                self.text_font = QFont("monospace", 12)  # generic fallback
         self.text_color = QColor(0, 0, 0)
         self.bg_color = QColor(255, 255, 255)
         self.decimal_precision = 6
@@ -806,6 +811,7 @@ class ScientificCalculator(QMainWindow):
         self.setup_toolbar()
         self.load_settings()  # Load settings after UI is set up
         self.apply_styling()
+        self.load_panel_configuration()  # Load panel configuration after UI setup
 
     def setup_calculation_namespace(self):
         """Prepare the safe evaluation namespace for calculations"""
@@ -1080,6 +1086,11 @@ class ScientificCalculator(QMainWindow):
         
         view_menu.addSeparator()
         
+        # Panel layout configuration
+        panel_layout_action = QAction("Configure Panel Layout", self)
+        panel_layout_action.triggered.connect(self.open_panel_layout_config)
+        view_menu.addAction(panel_layout_action)
+        
         # Theme customizer
         theme_action = QAction("Customize Theme", self)
         theme_action.triggered.connect(self.open_theme_customizer)
@@ -1103,6 +1114,681 @@ class ScientificCalculator(QMainWindow):
         help_action.triggered.connect(self.show_help)
         help_menu.addAction(help_action)
         
+    def setup_toolbar(self):
+        """Setup the toolbar with quick actions"""
+        toolbar = QToolBar()
+        self.addToolBar(toolbar)
+        
+        # Quick function buttons
+        functions = [
+            ("π", "math.pi"),
+            ("e", "math.e"),
+            ("sin", "math.sin("),
+            ("cos", "math.cos("),
+            ("tan", "math.tan("),
+            ("√", "math.sqrt("),
+            ("log", "math.log("),
+            ("ln", "math.log("),
+            ("x²", "**2"),
+            ("x^y", "**")
+        ]
+        
+        for name, func in functions:
+            btn = QPushButton(name)
+            btn.clicked.connect(lambda checked, f=func: self.insert_function(f))
+            toolbar.addWidget(btn)
+        
+    def setup_math_menu(self, menubar):
+        """Setup the Math Functions menu"""
+        math_menu = menubar.addMenu("Math")
+        
+        # Trigonometric functions
+        trig_menu = math_menu.addMenu("Trigonometric")
+        trig_functions = [
+            ("sin(x)", "math.sin("),
+            ("cos(x)", "math.cos("),
+            ("tan(x)", "math.tan("),
+            ("asin(x)", "math.asin("),
+            ("acos(x)", "math.acos("),
+            ("atan(x)", "math.atan("),
+            ("atan2(y,x)", "math.atan2("),
+            ("sinh(x)", "math.sinh("),
+            ("cosh(x)", "math.cosh("),
+            ("tanh(x)", "math.tanh("),
+            ("asinh(x)", "math.asinh("),
+            ("acosh(x)", "math.acosh("),
+            ("atanh(x)", "math.atanh("),
+        ]
+        for name, func in trig_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            trig_menu.addAction(action)
+        
+        # Logarithmic and exponential
+        log_menu = math_menu.addMenu("Logarithmic & Exponential")
+        log_functions = [
+            ("exp(x)", "math.exp("),
+            ("log(x)", "math.log("),
+            ("log10(x)", "math.log10("),
+            ("log2(x)", "math.log2("),
+            ("log(x, base)", "math.log("),
+            ("pow(x, y)", "math.pow("),
+            ("sqrt(x)", "math.sqrt("),
+        ]
+        for name, func in log_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            log_menu.addAction(action)
+        
+        # Number theory and utilities
+        util_menu = math_menu.addMenu("Number Theory & Utilities")
+        util_functions = [
+            ("abs(x)", "abs("),
+            ("ceil(x)", "math.ceil("),
+            ("floor(x)", "math.floor("),
+            ("round(x)", "round("),
+            ("trunc(x)", "math.trunc("),
+            ("fabs(x)", "math.fabs("),
+            ("gcd(a, b)", "math.gcd("),
+            ("lcm(a, b)", "math.lcm("),
+            ("factorial(x)", "math.factorial("),
+            ("comb(n, k)", "math.comb("),
+            ("perm(n, k)", "math.perm("),
+        ]
+        for name, func in util_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            util_menu.addAction(action)
+        
+        # Special functions
+        special_menu = math_menu.addMenu("Special Functions")
+        special_functions = [
+            ("gamma(x)", "math.gamma("),
+            ("lgamma(x)", "math.lgamma("),
+            ("erf(x)", "math.erf("),
+            ("erfc(x)", "math.erfc("),
+            ("degrees(x)", "math.degrees("),
+            ("radians(x)", "math.radians("),
+        ]
+        for name, func in special_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            special_menu.addAction(action)
+    
+    def setup_random_menu(self, menubar):
+        """Setup the Random menu"""
+        random_menu = menubar.addMenu("Random")
+        random_functions = [
+            ("random()", "random.random()"),
+            ("randint(a, b)", "random.randint("),
+            ("uniform(a, b)", "random.uniform("),
+            ("choice(seq)", "random.choice("),
+            ("shuffle(seq)", "random.shuffle("),
+            ("sample(seq, k)", "random.sample("),
+            ("seed(n)", "random.seed("),
+        ]
+        for name, func in random_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            random_menu.addAction(action)
+
+    def setup_statistics_menu(self, menubar):
+        """Setup the Statistics menu"""
+        stats_menu = menubar.addMenu("Statistics")
+        stats_functions = [
+            ("mean(data)", "statistics.mean("),
+            ("median(data)", "statistics.median("),
+            ("mode(data)", "statistics.mode("),
+            ("stdev(data)", "statistics.stdev("),
+            ("variance(data)", "statistics.variance("),
+            ("harmonic_mean(data)", "statistics.harmonic_mean("),
+            ("multimode(data)", "statistics.multimode("),
+        ]
+        for name, func in stats_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            stats_menu.addAction(action)
+
+    def setup_cmath_menu(self, menubar):
+        """Setup the Complex Math menu"""
+        cmath_menu = menubar.addMenu("Complex Math (cmath)")
+        cmath_functions = [
+            ("sqrt(z)", "cmath.sqrt("),
+            ("exp(z)", "cmath.exp("),
+            ("log(z)", "cmath.log("),
+            ("sin(z)", "cmath.sin("),
+            ("cos(z)", "cmath.cos("),
+            ("tan(z)", "cmath.tan("),
+            ("phase(z)", "cmath.phase("),
+            ("polar(z)", "cmath.polar("),
+            ("rect(r, phi)", "cmath.rect("),
+        ]
+        for name, func in cmath_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            cmath_menu.addAction(action)
+
+    def setup_decimal_menu(self, menubar):
+        """Setup the Decimal menu"""
+        decimal_menu = menubar.addMenu("Decimal")
+        decimal_functions = [
+            ("Decimal('0.1')", "decimal.Decimal('"),
+            ("getcontext()", "decimal.getcontext()"),
+            ("setcontext(ctx)", "decimal.setcontext("),
+            ("localcontext()", "decimal.localcontext()"),
+        ]
+        for name, func in decimal_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            decimal_menu.addAction(action)
+
+    def setup_fractions_menu(self, menubar):
+        """Setup the Fractions menu"""
+        fractions_menu = menubar.addMenu("Fractions")
+        fractions_functions = [
+            ("Fraction(1, 3)", "fractions.Fraction("),
+            ("Fraction.from_float(0.5)", "fractions.Fraction.from_float("),
+            ("Fraction.from_decimal(d)", "fractions.Fraction.from_decimal("),
+            ("gcd(a, b)", "fractions.gcd("),
+        ]
+        for name, func in fractions_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            fractions_menu.addAction(action)
+
+    def setup_constants_menu(self, menubar):
+        """Setup the Constants menu"""
+        constants_menu = menubar.addMenu("Constants")
+        # Mathematical constants
+        math_constants = [
+            ("π (pi)", "math.pi"),
+            ("e (Euler's number)", "math.e"),
+            ("τ (tau = 2π)", "math.tau"),
+            ("∞ (infinity)", "math.inf"),
+            ("NaN", "math.nan"),
+        ]
+        for name, const in math_constants:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+            constants_menu.addAction(action)
+        # NumPy constants
+        if 'np' in self.base_namespace:
+            constants_menu.addSeparator()
+            numpy_constants = [
+                ("np.pi", "np.pi"),
+                ("np.e", "np.e"),
+                ("np.inf", "np.inf"),
+                ("np.nan", "np.nan"),
+            ]
+            for name, const in numpy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+        # SymPy constants
+        if 'sym' in self.base_namespace:
+            constants_menu.addSeparator()
+            sympy_constants = [
+                ("sym.pi", "sym.pi"),
+                ("sym.E", "sym.E"),
+                ("sym.I (imaginary unit)", "sym.I"),
+                ("sym.oo (infinity)", "sym.oo"),
+                ("sym.zoo (complex infinity)", "sym.zoo"),
+            ]
+            for name, const in sympy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+
+    def setup_toolbar(self):
+        """Setup the toolbar with quick actions"""
+        toolbar = QToolBar()
+        self.addToolBar(toolbar)
+        
+        # Quick function buttons
+        functions = [
+            ("π", "math.pi"),
+            ("e", "math.e"),
+            ("sin", "math.sin("),
+            ("cos", "math.cos("),
+            ("tan", "math.tan("),
+            ("√", "math.sqrt("),
+            ("log", "math.log("),
+            ("ln", "math.log("),
+            ("x²", "**2"),
+            ("x^y", "**")
+        ]
+        
+        for name, func in functions:
+            btn = QPushButton(name)
+            btn.clicked.connect(lambda checked, f=func: self.insert_function(f))
+            toolbar.addWidget(btn)
+        
+    def setup_math_menu(self, menubar):
+        """Setup the Math Functions menu"""
+        math_menu = menubar.addMenu("Math")
+        
+        # Trigonometric functions
+        trig_menu = math_menu.addMenu("Trigonometric")
+        trig_functions = [
+            ("sin(x)", "math.sin("),
+            ("cos(x)", "math.cos("),
+            ("tan(x)", "math.tan("),
+            ("asin(x)", "math.asin("),
+            ("acos(x)", "math.acos("),
+            ("atan(x)", "math.atan("),
+            ("atan2(y,x)", "math.atan2("),
+            ("sinh(x)", "math.sinh("),
+            ("cosh(x)", "math.cosh("),
+            ("tanh(x)", "math.tanh("),
+            ("asinh(x)", "math.asinh("),
+            ("acosh(x)", "math.acosh("),
+            ("atanh(x)", "math.atanh("),
+        ]
+        for name, func in trig_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            trig_menu.addAction(action)
+        
+        # Logarithmic and exponential
+        log_menu = math_menu.addMenu("Logarithmic & Exponential")
+        log_functions = [
+            ("exp(x)", "math.exp("),
+            ("log(x)", "math.log("),
+            ("log10(x)", "math.log10("),
+            ("log2(x)", "math.log2("),
+            ("log(x, base)", "math.log("),
+            ("pow(x, y)", "math.pow("),
+            ("sqrt(x)", "math.sqrt("),
+        ]
+        for name, func in log_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            log_menu.addAction(action)
+        
+        # Number theory and utilities
+        util_menu = math_menu.addMenu("Number Theory & Utilities")
+        util_functions = [
+            ("abs(x)", "abs("),
+            ("ceil(x)", "math.ceil("),
+            ("floor(x)", "math.floor("),
+            ("round(x)", "round("),
+            ("trunc(x)", "math.trunc("),
+            ("fabs(x)", "math.fabs("),
+            ("gcd(a, b)", "math.gcd("),
+            ("lcm(a, b)", "math.lcm("),
+            ("factorial(x)", "math.factorial("),
+            ("comb(n, k)", "math.comb("),
+            ("perm(n, k)", "math.perm("),
+        ]
+        for name, func in util_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            util_menu.addAction(action)
+        
+        # Special functions
+        special_menu = math_menu.addMenu("Special Functions")
+        special_functions = [
+            ("gamma(x)", "math.gamma("),
+            ("lgamma(x)", "math.lgamma("),
+            ("erf(x)", "math.erf("),
+            ("erfc(x)", "math.erfc("),
+            ("degrees(x)", "math.degrees("),
+            ("radians(x)", "math.radians("),
+        ]
+        for name, func in special_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            special_menu.addAction(action)
+    
+    def setup_random_menu(self, menubar):
+        """Setup the Random menu"""
+        random_menu = menubar.addMenu("Random")
+        random_functions = [
+            ("random()", "random.random()"),
+            ("randint(a, b)", "random.randint("),
+            ("uniform(a, b)", "random.uniform("),
+            ("choice(seq)", "random.choice("),
+            ("shuffle(seq)", "random.shuffle("),
+            ("sample(seq, k)", "random.sample("),
+            ("seed(n)", "random.seed("),
+        ]
+        for name, func in random_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            random_menu.addAction(action)
+
+    def setup_statistics_menu(self, menubar):
+        """Setup the Statistics menu"""
+        stats_menu = menubar.addMenu("Statistics")
+        stats_functions = [
+            ("mean(data)", "statistics.mean("),
+            ("median(data)", "statistics.median("),
+            ("mode(data)", "statistics.mode("),
+            ("stdev(data)", "statistics.stdev("),
+            ("variance(data)", "statistics.variance("),
+            ("harmonic_mean(data)", "statistics.harmonic_mean("),
+            ("multimode(data)", "statistics.multimode("),
+        ]
+        for name, func in stats_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            stats_menu.addAction(action)
+
+    def setup_cmath_menu(self, menubar):
+        """Setup the Complex Math menu"""
+        cmath_menu = menubar.addMenu("Complex Math (cmath)")
+        cmath_functions = [
+            ("sqrt(z)", "cmath.sqrt("),
+            ("exp(z)", "cmath.exp("),
+            ("log(z)", "cmath.log("),
+            ("sin(z)", "cmath.sin("),
+            ("cos(z)", "cmath.cos("),
+            ("tan(z)", "cmath.tan("),
+            ("phase(z)", "cmath.phase("),
+            ("polar(z)", "cmath.polar("),
+            ("rect(r, phi)", "cmath.rect("),
+        ]
+        for name, func in cmath_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            cmath_menu.addAction(action)
+
+    def setup_decimal_menu(self, menubar):
+        """Setup the Decimal menu"""
+        decimal_menu = menubar.addMenu("Decimal")
+        decimal_functions = [
+            ("Decimal('0.1')", "decimal.Decimal('"),
+            ("getcontext()", "decimal.getcontext()"),
+            ("setcontext(ctx)", "decimal.setcontext("),
+            ("localcontext()", "decimal.localcontext()"),
+        ]
+        for name, func in decimal_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            decimal_menu.addAction(action)
+
+    def setup_fractions_menu(self, menubar):
+        """Setup the Fractions menu"""
+        fractions_menu = menubar.addMenu("Fractions")
+        fractions_functions = [
+            ("Fraction(1, 3)", "fractions.Fraction("),
+            ("Fraction.from_float(0.5)", "fractions.Fraction.from_float("),
+            ("Fraction.from_decimal(d)", "fractions.Fraction.from_decimal("),
+            ("gcd(a, b)", "fractions.gcd("),
+        ]
+        for name, func in fractions_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            fractions_menu.addAction(action)
+
+    def setup_constants_menu(self, menubar):
+        """Setup the Constants menu"""
+        constants_menu = menubar.addMenu("Constants")
+        # Mathematical constants
+        math_constants = [
+            ("π (pi)", "math.pi"),
+            ("e (Euler's number)", "math.e"),
+            ("τ (tau = 2π)", "math.tau"),
+            ("∞ (infinity)", "math.inf"),
+            ("NaN", "math.nan"),
+        ]
+        for name, const in math_constants:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+            constants_menu.addAction(action)
+        # NumPy constants
+        if 'np' in self.base_namespace:
+            constants_menu.addSeparator()
+            numpy_constants = [
+                ("np.pi", "np.pi"),
+                ("np.e", "np.e"),
+                ("np.inf", "np.inf"),
+                ("np.nan", "np.nan"),
+            ]
+            for name, const in numpy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+        # SymPy constants
+        if 'sym' in self.base_namespace:
+            constants_menu.addSeparator()
+            sympy_constants = [
+                ("sym.pi", "sym.pi"),
+                ("sym.E", "sym.E"),
+                ("sym.I (imaginary unit)", "sym.I"),
+                ("sym.oo (infinity)", "sym.oo"),
+                ("sym.zoo (complex infinity)", "sym.zoo"),
+            ]
+            for name, const in sympy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+
+    def setup_toolbar(self):
+        """Setup the toolbar with quick actions"""
+        toolbar = QToolBar()
+        self.addToolBar(toolbar)
+        
+        # Quick function buttons
+        functions = [
+            ("π", "math.pi"),
+            ("e", "math.e"),
+            ("sin", "math.sin("),
+            ("cos", "math.cos("),
+            ("tan", "math.tan("),
+            ("√", "math.sqrt("),
+            ("log", "math.log("),
+            ("ln", "math.log("),
+            ("x²", "**2"),
+            ("x^y", "**")
+        ]
+        
+        for name, func in functions:
+            btn = QPushButton(name)
+            btn.clicked.connect(lambda checked, f=func: self.insert_function(f))
+            toolbar.addWidget(btn)
+        
+    def setup_math_menu(self, menubar):
+        """Setup the Math Functions menu"""
+        math_menu = menubar.addMenu("Math")
+        
+        # Trigonometric functions
+        trig_menu = math_menu.addMenu("Trigonometric")
+        trig_functions = [
+            ("sin(x)", "math.sin("),
+            ("cos(x)", "math.cos("),
+            ("tan(x)", "math.tan("),
+            ("asin(x)", "math.asin("),
+            ("acos(x)", "math.acos("),
+            ("atan(x)", "math.atan("),
+            ("atan2(y,x)", "math.atan2("),
+            ("sinh(x)", "math.sinh("),
+            ("cosh(x)", "math.cosh("),
+            ("tanh(x)", "math.tanh("),
+            ("asinh(x)", "math.asinh("),
+            ("acosh(x)", "math.acosh("),
+            ("atanh(x)", "math.atanh("),
+        ]
+        for name, func in trig_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            trig_menu.addAction(action)
+        
+        # Logarithmic and exponential
+        log_menu = math_menu.addMenu("Logarithmic & Exponential")
+        log_functions = [
+            ("exp(x)", "math.exp("),
+            ("log(x)", "math.log("),
+            ("log10(x)", "math.log10("),
+            ("log2(x)", "math.log2("),
+            ("log(x, base)", "math.log("),
+            ("pow(x, y)", "math.pow("),
+            ("sqrt(x)", "math.sqrt("),
+        ]
+        for name, func in log_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            log_menu.addAction(action)
+        
+        # Number theory and utilities
+        util_menu = math_menu.addMenu("Number Theory & Utilities")
+        util_functions = [
+            ("abs(x)", "abs("),
+            ("ceil(x)", "math.ceil("),
+            ("floor(x)", "math.floor("),
+            ("round(x)", "round("),
+            ("trunc(x)", "math.trunc("),
+            ("fabs(x)", "math.fabs("),
+            ("gcd(a, b)", "math.gcd("),
+            ("lcm(a, b)", "math.lcm("),
+            ("factorial(x)", "math.factorial("),
+            ("comb(n, k)", "math.comb("),
+            ("perm(n, k)", "math.perm("),
+        ]
+        for name, func in util_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            util_menu.addAction(action)
+        
+        # Special functions
+        special_menu = math_menu.addMenu("Special Functions")
+        special_functions = [
+            ("gamma(x)", "math.gamma("),
+            ("lgamma(x)", "math.lgamma("),
+            ("erf(x)", "math.erf("),
+            ("erfc(x)", "math.erfc("),
+            ("degrees(x)", "math.degrees("),
+            ("radians(x)", "math.radians("),
+        ]
+        for name, func in special_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            special_menu.addAction(action)
+    
+    def setup_random_menu(self, menubar):
+        """Setup the Random menu"""
+        random_menu = menubar.addMenu("Random")
+        random_functions = [
+            ("random()", "random.random()"),
+            ("randint(a, b)", "random.randint("),
+            ("uniform(a, b)", "random.uniform("),
+            ("choice(seq)", "random.choice("),
+            ("shuffle(seq)", "random.shuffle("),
+            ("sample(seq, k)", "random.sample("),
+            ("seed(n)", "random.seed("),
+        ]
+        for name, func in random_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            random_menu.addAction(action)
+
+    def setup_statistics_menu(self, menubar):
+        """Setup the Statistics menu"""
+        stats_menu = menubar.addMenu("Statistics")
+        stats_functions = [
+            ("mean(data)", "statistics.mean("),
+            ("median(data)", "statistics.median("),
+            ("mode(data)", "statistics.mode("),
+            ("stdev(data)", "statistics.stdev("),
+            ("variance(data)", "statistics.variance("),
+            ("harmonic_mean(data)", "statistics.harmonic_mean("),
+            ("multimode(data)", "statistics.multimode("),
+        ]
+        for name, func in stats_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            stats_menu.addAction(action)
+
+    def setup_cmath_menu(self, menubar):
+        """Setup the Complex Math menu"""
+        cmath_menu = menubar.addMenu("Complex Math (cmath)")
+        cmath_functions = [
+            ("sqrt(z)", "cmath.sqrt("),
+            ("exp(z)", "cmath.exp("),
+            ("log(z)", "cmath.log("),
+            ("sin(z)", "cmath.sin("),
+            ("cos(z)", "cmath.cos("),
+            ("tan(z)", "cmath.tan("),
+            ("phase(z)", "cmath.phase("),
+            ("polar(z)", "cmath.polar("),
+            ("rect(r, phi)", "cmath.rect("),
+        ]
+        for name, func in cmath_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            cmath_menu.addAction(action)
+
+    def setup_decimal_menu(self, menubar):
+        """Setup the Decimal menu"""
+        decimal_menu = menubar.addMenu("Decimal")
+        decimal_functions = [
+            ("Decimal('0.1')", "decimal.Decimal('"),
+            ("getcontext()", "decimal.getcontext()"),
+            ("setcontext(ctx)", "decimal.setcontext("),
+            ("localcontext()", "decimal.localcontext()"),
+        ]
+        for name, func in decimal_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            decimal_menu.addAction(action)
+
+    def setup_fractions_menu(self, menubar):
+        """Setup the Fractions menu"""
+        fractions_menu = menubar.addMenu("Fractions")
+        fractions_functions = [
+            ("Fraction(1, 3)", "fractions.Fraction("),
+            ("Fraction.from_float(0.5)", "fractions.Fraction.from_float("),
+            ("Fraction.from_decimal(d)", "fractions.Fraction.from_decimal("),
+            ("gcd(a, b)", "fractions.gcd("),
+        ]
+        for name, func in fractions_functions:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, f=func: self.insert_function(f))
+            fractions_menu.addAction(action)
+
+    def setup_constants_menu(self, menubar):
+        """Setup the Constants menu"""
+        constants_menu = menubar.addMenu("Constants")
+        # Mathematical constants
+        math_constants = [
+            ("π (pi)", "math.pi"),
+            ("e (Euler's number)", "math.e"),
+            ("τ (tau = 2π)", "math.tau"),
+            ("∞ (infinity)", "math.inf"),
+            ("NaN", "math.nan"),
+        ]
+        for name, const in math_constants:
+            action = QAction(name, self)
+            action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+            constants_menu.addAction(action)
+        # NumPy constants
+        if 'np' in self.base_namespace:
+            constants_menu.addSeparator()
+            numpy_constants = [
+                ("np.pi", "np.pi"),
+                ("np.e", "np.e"),
+                ("np.inf", "np.inf"),
+                ("np.nan", "np.nan"),
+            ]
+            for name, const in numpy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+        # SymPy constants
+        if 'sym' in self.base_namespace:
+            constants_menu.addSeparator()
+            sympy_constants = [
+                ("sym.pi", "sym.pi"),
+                ("sym.E", "sym.E"),
+                ("sym.I (imaginary unit)", "sym.I"),
+                ("sym.oo (infinity)", "sym.oo"),
+                ("sym.zoo (complex infinity)", "sym.zoo"),
+            ]
+            for name, const in sympy_constants:
+                action = QAction(name, self)
+                action.triggered.connect(lambda checked, c=const: self.insert_function(c))
+                constants_menu.addAction(action)
+
     def setup_toolbar(self):
         """Setup the toolbar with quick actions"""
         toolbar = QToolBar()
@@ -1605,12 +2291,110 @@ class ScientificCalculator(QMainWindow):
         dialog = ThemeCustomizer(self)
         dialog.exec()
     
+    def open_panel_layout_config(self):
+        """Open panel layout configuration dialog"""
+        try:
+            from panel_config_manager import PanelConfigManager, PanelLayoutDialog
+            
+            # Initialize config manager if not exists
+            if not hasattr(self, 'panel_config_manager'):
+                self.panel_config_manager = PanelConfigManager()
+            
+            # Create and show dialog
+            layout_dialog = PanelLayoutDialog(self, self.panel_config_manager)
+            layout_dialog.show_layout_config()
+            
+        except ImportError:
+            QMessageBox.warning(self, "Error", 
+                              "Panel configuration manager not available. "
+                              "Please ensure panel_config_manager.py is in the same directory.")
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to open panel configuration: {e}")
+    
+    def reload_panel_layout(self):
+        """Reload panel layout based on configuration"""
+        try:
+            if not hasattr(self, 'panel_config_manager'):
+                from panel_config_manager import PanelConfigManager
+                self.panel_config_manager = PanelConfigManager()
+            
+            layout = self.panel_config_manager.get_panel_layout()
+            self.apply_panel_layout(layout)
+            
+        except Exception as e:
+            print(f"Error reloading panel layout: {e}")
+    
+    def apply_panel_layout(self, layout):
+        """Apply a panel layout configuration"""
+        # This is a simplified version - you can expand this based on your needs
+        for position, config in layout.items():
+            panel_name = config.get("panel")
+            visible = config.get("visible", False)
+            
+            if panel_name and visible:
+                # Show/hide panels based on configuration
+                if panel_name == "history" and hasattr(self, 'history_dock'):
+                    self.history_dock.setVisible(True)
+                elif panel_name == "functions" and hasattr(self, 'functions_dock'):
+                    self.functions_dock.setVisible(True)
+                elif panel_name == "graph" and hasattr(self, 'graph_dock'):
+                    self.graph_dock.setVisible(True)
+                elif panel_name == "variables" and hasattr(self, 'variables_dock'):
+                    self.variables_dock.setVisible(True)
+    
+    def apply_panel_styling(self, panel_name):
+        """Apply styling to a specific panel"""
+        try:
+            if not hasattr(self, 'panel_config_manager'):
+                from panel_config_manager import PanelConfigManager
+                self.panel_config_manager = PanelConfigManager()
+            
+            stylesheet = self.panel_config_manager.generate_qt_stylesheet(panel_name)
+            
+            # Apply stylesheet to appropriate dock widget
+            if panel_name == "history" and hasattr(self, 'history_dock'):
+                self.history_dock.setStyleSheet(stylesheet)
+            elif panel_name == "functions" and hasattr(self, 'functions_dock'):
+                self.functions_dock.setStyleSheet(stylesheet)
+            elif panel_name == "graph" and hasattr(self, 'graph_dock'):
+                self.graph_dock.setStyleSheet(stylesheet)
+            elif panel_name == "variables" and hasattr(self, 'variables_dock'):
+                self.variables_dock.setStyleSheet(stylesheet)
+                
+        except Exception as e:
+            print(f"Error applying panel styling for {panel_name}: {e}")
+    
+    def load_panel_configuration(self):
+        """Load and apply panel configuration on startup"""
+        try:
+            from panel_config_manager import PanelConfigManager
+            self.panel_config_manager = PanelConfigManager()
+            
+            # Apply layout
+            layout = self.panel_config_manager.get_panel_layout()
+            self.apply_panel_layout(layout)
+            
+            # Apply styling to all panels
+            for panel_name in self.panel_config_manager.get_available_panels():
+                self.apply_panel_styling(panel_name)
+                
+        except Exception as e:
+            print(f"Error loading panel configuration: {e}")
+    
     def insert_custom_function(self, name, code):
         """Insert custom function into current editor"""
         editor = self.get_current_editor()
         if editor:
             cursor = editor.textCursor()
             cursor.insertText(f"{name}(")
+            editor.setFocus()
+    
+    def insert_function(self, function_text):
+        """Insert function or constant into current editor"""
+        editor = self.get_current_editor()
+        if editor:
+            cursor = editor.textCursor()
+            cursor.insertText(function_text)
             editor.setFocus()
     
     def insert_conversion_result(self, result):
@@ -1664,42 +2448,50 @@ class ScientificCalculator(QMainWindow):
     
     def apply_custom_theme(self, theme_data):
         """Apply custom theme from theme customizer"""
-        colors = theme_data['colors']
-        font = theme_data['font']
-        font_size = theme_data['font_size']
-        
-        # Update current settings
-        self.text_font = font
-        self.text_font.setPointSize(font_size)
-        self.bg_color = colors['bg']
-        self.text_color = colors['text']
-        
-        # Apply styling
-        self.apply_styling()
-        
-        # Update all editors
-        for i in range(self.tab_widget.count()):
-            widget = self.tab_widget.widget(i)
-            if widget and hasattr(widget, 'editor'):
-                editor = widget.editor
-                editor.setFont(self.text_font)
-                
-                # Apply custom styling
-                editor.setStyleSheet(f"""
-                    QPlainTextEdit {{
-                        background-color: {colors['bg'].name()};
-                        color: {colors['text'].name()};
-                        border: 1px solid #3c3c3c;
-                        line-height: 1.4;
-                        padding: 10px;
-                        selection-background-color: #264f78;
-                        selection-color: white;
-                    }}
-                """)
-                
-                # Update highlighter with custom colors
-                if hasattr(widget, 'highlighter'):
-                    widget.highlighter.setup_custom_theme(colors)
+        try:
+            colors = theme_data['colors']
+            font = theme_data['font']
+            font_size = theme_data['font_size']
+            
+            # Validate font
+            if not isinstance(font, QFont):
+                font = QFont("Monaco", 12)
+            
+            # Update current settings
+            self.text_font = font
+            self.text_font.setPointSize(font_size)
+            self.bg_color = colors['bg']
+            self.text_color = colors['text']
+            
+            # Apply styling
+            self.apply_styling()
+            
+            # Update all editors
+            for i in range(self.tab_widget.count()):
+                widget = self.tab_widget.widget(i)
+                if widget and hasattr(widget, 'editor'):
+                    editor = widget.editor
+                    editor.setFont(self.text_font)
+                    
+                    # Apply custom styling
+                    editor.setStyleSheet(f"""
+                        QPlainTextEdit {{
+                            background-color: {colors['bg'].name()};
+                            color: {colors['text'].name()};
+                            border: 1px solid #3c3c3c;
+                            line-height: 1.4;
+                            padding: 10px;
+                            selection-background-color: #264f78;
+                            selection-color: white;
+                        }}
+                    """)
+                    
+                    # Update highlighter with custom colors
+                    if hasattr(widget, 'highlighter'):
+                        widget.highlighter.setup_custom_theme(colors)
+        except Exception as e:
+            print(f"Error applying custom theme: {e}")
+            QMessageBox.warning(self, "Theme Error", f"Failed to apply theme: {e}")
     
     def on_text_changed(self, editor):
         """Handle text changes in a specific editor"""
@@ -1877,8 +2669,8 @@ class ScientificCalculator(QMainWindow):
                         'is_multiline': True
                     })
                     current_block = ""
-                    indent_level = 0
                 
+                # Add single line
                 processed.append({
                     'line_num': i,
                     'code': line,
@@ -1991,6 +2783,8 @@ class ScientificCalculator(QMainWindow):
         self.bg_color = QColor(self.settings.value("bgColor", "#ffffff"))
         self.decimal_precision = int(self.settings.value("precision", 6))
         self.theme = self.settings.value("theme", "Default")
+        
+        self.apply_styling()
     
     def open_settings(self):
         """Open settings dialog"""
@@ -2630,7 +3424,7 @@ class VariableInspector(QWidget):
                 type(value).__name__,
                 str(value)[:100] + ("..." if len(str(value)) > 100 else "")
             ])
-            self.variables_tree.addItem(item)
+            self.variables_tree.addTopLevelItem(item)
     
     def refresh_variables(self):
         """Refresh variables from parent"""
@@ -2768,7 +3562,21 @@ class ThemeCustomizer(QDialog):
             'number': QColor(181, 206, 168)
         }
         
+        # Initialize font - use system default if Consolas is not available
         self.current_font = QFont("Consolas", 12)
+        if not self.current_font.exactMatch():
+            self.current_font = QFont("Monaco", 12)  # macOS monospace font
+            if not self.current_font.exactMatch():
+                self.current_font = QFont("monospace", 12)  # fallback
+        
+        # Set initial font size in spinner
+        self.font_size_spin.setValue(self.current_font.pointSize())
+        
+        # Connect font size spinner
+        self.font_size_spin.valueChanged.connect(self.update_preview)
+        
+        # Initial preview update
+        self.update_preview()
         
     def load_preset_theme(self, theme_name):
         """Load a preset theme"""
@@ -2812,26 +3620,47 @@ class ThemeCustomizer(QDialog):
     
     def choose_font(self):
         """Choose font"""
-        font, ok = QFontDialog.getFont(self.current_font, self)
-        if ok:
-            self.current_font = font
-            self.font_size_spin.setValue(font.pointSize())
-            self.update_preview()
+        try:
+            font, ok = QFontDialog.getFont(self.current_font, self)
+            if ok and isinstance(font, QFont):
+                self.current_font = font
+                self.font_size_spin.setValue(font.pointSize())
+                self.update_preview()
+        except Exception as e:
+            print(f"Error choosing font: {e}")
+            # Fallback to default font
+            self.current_font = QFont("Monaco", 12)
     
     def update_preview(self):
         """Update the preview text styling"""
-        self.preview_text.setStyleSheet(f"""
-            QTextEdit {{
-                background-color: {self.colors['bg'].name()};
-                color: {self.colors['text'].name()};
-                font-family: {self.current_font.family()};
-                font-size: {self.font_size_spin.value()}pt;
-            }}
-        """)
+        try:
+            if isinstance(self.current_font, QFont):
+                font_family = self.current_font.family()
+                font_size = self.font_size_spin.value()
+            else:
+                # Fallback font
+                self.current_font = QFont("Monaco", 12)
+                font_family = self.current_font.family()
+                font_size = 12
+                
+            self.preview_text.setStyleSheet(f"""
+                QTextEdit {{
+                    background-color: {self.colors['bg'].name()};
+                    color: {self.colors['text'].name()};
+                    font-family: {font_family};
+                    font-size: {font_size}pt;
+                }}
+            """)
+        except Exception as e:
+            print(f"Error updating preview: {e}")
     
     def apply_theme(self):
         """Apply theme to parent"""
         if hasattr(self.parent(), 'apply_custom_theme'):
+            # Ensure we have a valid font
+            if not isinstance(self.current_font, QFont):
+                self.current_font = QFont("Monaco", 12)
+                
             theme_data = {
                 'colors': self.colors,
                 'font': self.current_font,
@@ -2933,16 +3762,31 @@ class SettingsDialog(QDialog):
 
 def launch_app():
     """Launch the calculator GUI application."""
-    app = QApplication(sys.argv)
-    app.setApplicationName("Advanced Scientific Calculator")
-    app.setApplicationVersion("2.0")
-    app.setOrganizationName("Scientific Calculator")
+    try:
+        print("Starting Advanced Scientific Calculator...")
+        app = QApplication(sys.argv)
+        app.setApplicationName("Advanced Scientific Calculator")
+        app.setApplicationVersion("2.0")
+        app.setOrganizationName("Scientific Calculator")
+        print("QApplication created successfully")
 
-    main_win = ScientificCalculator()
-    main_win.show()
+        print("Creating main window...")
+        main_win = ScientificCalculator()
+        print("Main window created successfully")
+        
+        main_win.show()
+        print("Main window shown, starting event loop...")
 
-    # Start the event loop
-    sys.exit(app.exec())
+        # Start the event loop
+        result = app.exec()
+        print(f"Event loop finished with result: {result}")
+        sys.exit(result)
+        
+    except Exception as e:
+        print(f"Error launching application: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
